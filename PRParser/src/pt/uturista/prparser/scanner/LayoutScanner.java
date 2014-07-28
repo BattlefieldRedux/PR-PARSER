@@ -1,0 +1,201 @@
+package pt.uturista.prparser.scanner;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
+import pt.uturista.log.Log;
+import pt.uturista.prparser.model.Asset;
+import pt.uturista.prparser.model.Asset.Builder;
+import pt.uturista.prparser.model.Layout;
+import pt.uturista.prparser.model.Vehicle;
+import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
+import pt.uturista.prspy.model.Map;
+
+public class LayoutScanner {
+	private static final String TAG = "LayoutScanner";
+	final private VehicleLibrary vehicleLibrary;
+
+	private LayoutScanner(VehicleLibrary vehicleLibrary) {
+		this.vehicleLibrary = vehicleLibrary;
+	}
+
+	public static LayoutScanner getInstance(VehicleLibrary vehicleLibrary) {
+		return new LayoutScanner(vehicleLibrary);
+	}
+
+	public Layout scan(File file) {
+
+		final File gameSize = file.getParentFile();
+		final File gameMode = gameSize.getParentFile();
+
+		Layout.Builder layoutBuilder = new Layout.Builder();
+		layoutBuilder.setGameMode(gameMode.getName());
+		layoutBuilder.setGameSize(gameSize.getName());
+
+		Log.d(TAG, "scan(" + gameMode.getName() + "/" + gameSize.getName()
+				+ ")");
+
+		if (gameMode.getName().equals("gpm_coop")) {
+			Log.d(TAG, "GameMode is Coop");
+			return null;
+		}
+		boolean implicitFactions = true;
+		try (BufferedReader bf = new BufferedReader(new FileReader(file));) {
+
+			String line;
+			Asset.Builder assetBuilder = null;
+			String[] token = null;
+
+			while ((line = bf.readLine()) != null) {
+				Log.i(TAG, line);
+
+				if (line.startsWith("ObjectTemplate.create ObjectSpawner")) {
+					Log.d(TAG, "ObjectTemplate.create");
+
+					if (assetBuilder != null) {
+						final Asset asset = assetBuilder.build();
+						if (asset != null)
+							layoutBuilder.addAsset(asset, asset.getTeam());
+					}
+					assetBuilder = new Asset.Builder();
+
+				} else if (line.startsWith("ObjectTemplate.team ")) {
+					token = line.split(" ");
+					assetBuilder.setTeam(Integer.parseInt(token[1]));
+
+				} else if (line.startsWith("ObjectTemplate.minSpawnDelay")) {
+
+					token = line.split(" ");
+					int delay = Integer.parseInt(token[1]);
+					Log.d(TAG, "minDelay: " + delay);
+					assetBuilder.setMinDelay(delay);
+
+				} else if (line.startsWith("ObjectTemplate.maxSpawnDelay")) {
+					token = line.split(" ");
+					int delay = Integer.parseInt(token[1]);
+					Log.d(TAG, "maxDelay: " + delay);
+					assetBuilder.setMaxDelay(delay);
+
+				} else if (line.startsWith("ObjectTemplate.spawnDelayAtStart")) {
+					token = line.split(" ");
+
+					Log.d(TAG, "startDelay: " + token[1]);
+					if (token[1].equals("1"))
+						assetBuilder.setStartDelay(true);
+
+				} else if (line.startsWith("ObjectTemplate.setObjectTemplate")) {
+					parseAssetName(line, assetBuilder);
+
+				} else if (line.startsWith("rem")) {
+					continue;
+				} else if (line.startsWith("run")) {// eg: run
+													// ../../../Init_canada.con
+					token = line.split(" ");
+					File initFile = getInitFile(token[1], file);
+					implicitFactions = !parseFactions(initFile, layoutBuilder);
+
+				}
+			}
+
+		} catch (Exception ex) {
+			ex.toString();
+		}
+
+		if (implicitFactions) {
+			File initFile = getInitFile("../../../init.con", file);
+			parseFactions(initFile, layoutBuilder);
+		}
+
+		return layoutBuilder.build();
+	}
+
+	private File getInitFile(String path, File file) {
+		String[] tokens = path.split("/");
+		File rootFile = file.getParentFile();
+		String initPath = null;
+		for (String token : tokens) {
+			if (token.equals("..")) {
+				rootFile = rootFile.getParentFile();
+			} else if (token.endsWith(".con")) {
+				initPath = token;
+			}
+		}
+
+		if (rootFile == null || initPath == null) {
+			return null;
+		}
+		File initFile = null;
+		for (File configFiles : rootFile.listFiles()) {
+
+			if (configFiles.getName().equals(initPath)) {
+				initFile = configFiles;
+				break;
+			}
+		}
+
+		return initFile;
+	}
+
+	private boolean parseFactions(File file, Layout.Builder builder) {
+
+		if (file == null) {
+			return false;
+		}
+
+		try (BufferedReader bf = new BufferedReader(new FileReader(file));) {
+
+			String line;
+
+			while ((line = bf.readLine()) != null) {
+				if (line.startsWith("run ../../Factions/faction_init.con")) {
+
+					String[] subline = line.split(" ");
+					String[] factionClean = subline[3].replace("\"", "").split(
+							"_");
+
+					builder.setOpFaction(factionClean[0]);
+					Log.d(TAG, "OPFACTION: " + factionClean[0]);
+					line = bf.readLine();
+					subline = line.split(" ");
+					factionClean = subline[3].replace("\"", "").split("_");
+
+					builder.setBluFaction(factionClean[0]);
+					Log.d(TAG, "BLUFACTION: " + factionClean[0]);
+					return true;
+				}
+			}
+			bf.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+
+		}
+		return false;
+	}
+
+	private void parseAssetName(String line, Builder assetBuilder) {
+		Log.d(TAG, "parseAssetName()");
+		String[] token = line.split(" ");
+		assetBuilder.setTeam(Integer.parseInt(token[1]), false);
+		Log.d(TAG, "[" + token[2] + "] TEAM: " + token[1]);
+
+		if (token[2].startsWith("artillery") || token[2].startsWith("mortar")) {
+			assetBuilder.setVehicle(Vehicle.ARTILLERY);
+		} else {
+
+			final Vehicle vehicle = getVehicle(token[2]);
+
+			if (vehicle != null) {
+				assetBuilder.setVehicle(vehicle);
+			}
+
+		}
+
+	}
+
+	private Vehicle getVehicle(String key) {
+		return this.vehicleLibrary.get(key);
+	}
+
+}
