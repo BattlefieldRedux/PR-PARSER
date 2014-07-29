@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.util.HashMap;
 
-import pt.uturista.prparser.model.Vehicle;
+import pt.uturista.prspy.model.Vehicle;
 
 public class VehicleScanner {
 	public final static String TAG = "[VehicleScanner]";

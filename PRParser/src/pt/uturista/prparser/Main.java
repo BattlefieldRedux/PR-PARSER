@@ -1,12 +1,14 @@
 package pt.uturista.prparser;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import pt.uturista.log.Log;
 import pt.uturista.prparser.scanner.LevelScanner;
 import pt.uturista.prparser.scanner.LevelScanner.LevelLibrary;
 import pt.uturista.prparser.scanner.VehicleScanner;
 import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
+import pt.uturista.prspy.model.Map;
 import pt.uturista.utils.ZipExtrator;
 
 import com.google.gson.Gson;
@@ -37,7 +39,10 @@ public class Main {
 		LevelLibrary levelLibrary = levelScanner.buildLibrary(levelsRoot);
 
 		Gson gson = new Gson();
-		String json = gson.toJson(levelLibrary);
+		
+		
+		ArrayList<Map> output =levelLibrary.toArray();
+		String json = gson.toJson(output);
 		System.out.println(json);
 
 		Log.p("END");

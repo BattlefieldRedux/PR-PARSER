@@ -5,19 +5,19 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 
-import com.google.gson.Gson;
-
-import pt.uturista.log.Log;
-import pt.uturista.prparser.model.Layout;
-import pt.uturista.prparser.model.Level;
 import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
+import pt.uturista.prspy.model.Layout;
+import pt.uturista.prspy.model.Map;
 import pt.uturista.utils.ZipExtrator;
 
 public class LevelScanner {
 	private VehicleLibrary vehicleLibrary;
-	private HashSet<Level> levelLibrary;
+	private HashSet<Map> levelLibrary;
 	private String tempFolder;
 
 	public LevelScanner(VehicleLibrary library, String tempFolder) {
@@ -28,10 +28,11 @@ public class LevelScanner {
 
 	public LevelLibrary buildLibrary(File levelsRoot) {
 
-		Level.Builder builder =null;
+		Map.Builder builder = null;
 
 		for (File levelFolder : levelsRoot.listFiles()) {// Level Folders
-			builder =  new Level.Builder(); 
+			builder = new Map.Builder();
+			builder.setKey(levelFolder.getName());
 			for (File file : levelFolder.listFiles()) {// Config Files
 				if (file.getName().equalsIgnoreCase("INFO")) {
 					for (File files : file.listFiles()) {
@@ -54,7 +55,7 @@ public class LevelScanner {
 		return finalLibrary;
 	}
 
-	private boolean addToLibrary(Level level) {
+	private boolean addToLibrary(Map level) {
 		return this.levelLibrary.add(level);
 	}
 
@@ -81,7 +82,7 @@ public class LevelScanner {
 		return factionClean;
 	}
 
-	private void readLevelLayouts(Level.Builder builder) {
+	private void readLevelLayouts(Map.Builder builder) {
 		File leverServerRoot = new File(tempFolder);
 		LayoutScanner layoutscanner = LayoutScanner.getInstance(vehicleLibrary);
 
@@ -100,18 +101,55 @@ public class LevelScanner {
 						}
 					}
 				}
+			} else if (file.getName().equals("heightdata.con")) {
+				builder.setSize(readHeightData(file));
 			}
 		}
 	}
 
+	private int readHeightData(File file) {
+		try (BufferedReader bf = new BufferedReader(new FileReader(file));) {
+
+			String line;
+
+			while ((line = bf.readLine()) != null) {
+				if (line.startsWith("heightmapcluster.setHeightmapSize")) {
+					bf.close();
+					String[] subline = line.split(" ");
+					return Integer.parseInt(subline[1].substring(0, 1));
+				}
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
 	// =========================== LIBRARY ===============================
 
-	public static class LevelLibrary implements Serializable{
-	
-		final private HashSet<Level> library;
+	public static class LevelLibrary implements Serializable {
 
-		private LevelLibrary(HashSet<Level> library) {
+		final private HashSet<Map> library;
+
+		private LevelLibrary(HashSet<Map> library) {
 			this.library = library;
+		}
+
+		public ArrayList<Map> toArray() {
+
+			ArrayList<Map> arrayLibrary = new ArrayList<Map>(library);
+
+			Collections.sort(arrayLibrary, new Comparator<Map>() {
+
+				@Override
+				public int compare(Map o1, Map o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+
+			});
+
+			return arrayLibrary;
 		}
 
 	}

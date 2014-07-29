@@ -6,12 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import pt.uturista.log.Log;
-import pt.uturista.prparser.model.Asset;
-import pt.uturista.prparser.model.Asset.Builder;
-import pt.uturista.prparser.model.Layout;
-import pt.uturista.prparser.model.Vehicle;
 import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
-import pt.uturista.prspy.model.Map;
+import pt.uturista.prspy.model.Asset;
+import pt.uturista.prspy.model.Asset.Builder;
+import pt.uturista.prspy.model.Layout;
+import pt.uturista.prspy.model.Vehicle;
 
 public class LayoutScanner {
 	private static final String TAG = "LayoutScanner";
@@ -91,7 +90,7 @@ public class LayoutScanner {
 				} else if (line.startsWith("rem")) {
 					continue;
 				} else if (line.startsWith("run")) {// eg: run
-													// ../../../Init_canada.con
+					Log.d(TAG, line); // ../../../Init_canada.con
 					token = line.split(" ");
 					File initFile = getInitFile(token[1], file);
 					implicitFactions = !parseFactions(initFile, layoutBuilder);
@@ -112,6 +111,8 @@ public class LayoutScanner {
 	}
 
 	private File getInitFile(String path, File file) {
+		Log.d(TAG, "getInitFile(" + path + ")");
+		
 		String[] tokens = path.split("/");
 		File rootFile = file.getParentFile();
 		String initPath = null;
@@ -123,18 +124,26 @@ public class LayoutScanner {
 			}
 		}
 
-		if (rootFile == null || initPath == null) {
+		if (rootFile == null) {
+			Log.e(TAG, "getInitFile.rootFile is NULL");
 			return null;
 		}
+		if (initPath == null) {
+			Log.e(TAG, "getInitFile.initPath is NULL");
+			return null;
+		}
+		
 		File initFile = null;
 		for (File configFiles : rootFile.listFiles()) {
-
-			if (configFiles.getName().equals(initPath)) {
+			if (configFiles.getName().equalsIgnoreCase(initPath)) {
 				initFile = configFiles;
 				break;
 			}
 		}
-
+		if (initFile == null) {
+			Log.e(TAG, "getInitFile.initFile is NULL");
+		}
+		
 		return initFile;
 	}
 
@@ -143,6 +152,7 @@ public class LayoutScanner {
 		if (file == null) {
 			return false;
 		}
+		Log.p(TAG, "parseFactions(" + file.getName() + ")");
 
 		try (BufferedReader bf = new BufferedReader(new FileReader(file));) {
 
@@ -156,13 +166,13 @@ public class LayoutScanner {
 							"_");
 
 					builder.setOpFaction(factionClean[0]);
-					Log.d(TAG, "OPFACTION: " + factionClean[0]);
+					Log.p(TAG, "OPFACTION: " + factionClean[0]);
 					line = bf.readLine();
 					subline = line.split(" ");
 					factionClean = subline[3].replace("\"", "").split("_");
 
 					builder.setBluFaction(factionClean[0]);
-					Log.d(TAG, "BLUFACTION: " + factionClean[0]);
+					Log.p(TAG, "BLUFACTION: " + factionClean[0]);
 					return true;
 				}
 			}
