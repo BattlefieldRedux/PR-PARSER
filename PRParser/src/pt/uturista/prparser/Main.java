@@ -43,7 +43,8 @@ public class Main {
 		
 		ArrayList<Map> output =levelLibrary.toArray();
 		String json = gson.toJson(output);
-		System.out.println(json);
+		
+		System.out.println(json.replace("?", " "));
 
 		Log.p("END");
 	}
