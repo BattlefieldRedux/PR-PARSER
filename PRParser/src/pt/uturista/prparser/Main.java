@@ -9,7 +9,7 @@ import pt.uturista.prparser.scanner.LevelScanner.LevelLibrary;
 import pt.uturista.prparser.scanner.VehicleScanner;
 import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
 import pt.uturista.prspy.model.Map;
-import pt.uturista.utils.ZipExtrator;
+import pt.uturista.zip.ZipExtrator;
 
 import com.google.gson.Gson;
 
@@ -18,6 +18,7 @@ public class Main {
 	public static void main(String[] args) {
 		Log.info(false);
 		Log.debug(false);
+		Log.error(true);
 
 		final String levelsPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\levels";
 		final String vehiclesPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\content\\objects_vehicles_server.zip";
@@ -39,14 +40,12 @@ public class Main {
 		LevelLibrary levelLibrary = levelScanner.buildLibrary(levelsRoot);
 
 		Gson gson = new Gson();
-		
-		
-		ArrayList<Map> output =levelLibrary.toArray();
-		String json = gson.toJson(output);
-		
-		System.out.println(json.replace("?", " "));
 
-		Log.p("END");
+		ArrayList<Map> output = levelLibrary.toArray();
+		String json = gson.toJson(output);
+
+		final String finalJson = json.replace("?", " ");
+		Log.p(finalJson);
 	}
 
 }

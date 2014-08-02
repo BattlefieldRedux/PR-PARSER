@@ -8,6 +8,9 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.util.HashMap;
 
+
+
+import pt.uturista.log.Log;
 import pt.uturista.prspy.model.Vehicle;
 
 public class VehicleScanner {

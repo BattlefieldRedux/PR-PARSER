@@ -99,7 +99,7 @@ public class LayoutScanner {
 			}
 
 		} catch (Exception ex) {
-			ex.toString();
+			ex.printStackTrace();
 		}
 
 		if (implicitFactions) {
@@ -112,7 +112,7 @@ public class LayoutScanner {
 
 	private File getInitFile(String path, File file) {
 		Log.d(TAG, "getInitFile(" + path + ")");
-		
+
 		String[] tokens = path.split("/");
 		File rootFile = file.getParentFile();
 		String initPath = null;
@@ -132,7 +132,7 @@ public class LayoutScanner {
 			Log.e(TAG, "getInitFile.initPath is NULL");
 			return null;
 		}
-		
+
 		File initFile = null;
 		for (File configFiles : rootFile.listFiles()) {
 			if (configFiles.getName().equalsIgnoreCase(initPath)) {
@@ -143,7 +143,7 @@ public class LayoutScanner {
 		if (initFile == null) {
 			Log.e(TAG, "getInitFile.initFile is NULL");
 		}
-		
+
 		return initFile;
 	}
 
@@ -152,7 +152,7 @@ public class LayoutScanner {
 		if (file == null) {
 			return false;
 		}
-		Log.p(TAG, "parseFactions(" + file.getName() + ")");
+		Log.d(TAG, "parseFactions(" + file.getName() + ")");
 
 		try (BufferedReader bf = new BufferedReader(new FileReader(file));) {
 
@@ -166,13 +166,13 @@ public class LayoutScanner {
 							"_");
 
 					builder.setOpFaction(factionClean[0]);
-					Log.p(TAG, "OPFACTION: " + factionClean[0]);
+					Log.d(TAG, "OPFACTION: " + factionClean[0]);
 					line = bf.readLine();
 					subline = line.split(" ");
 					factionClean = subline[3].replace("\"", "").split("_");
 
 					builder.setBluFaction(factionClean[0]);
-					Log.p(TAG, "BLUFACTION: " + factionClean[0]);
+					Log.d(TAG, "BLUFACTION: " + factionClean[0]);
 					return true;
 				}
 			}
@@ -187,14 +187,21 @@ public class LayoutScanner {
 	private void parseAssetName(String line, Builder assetBuilder) {
 		Log.d(TAG, "parseAssetName()");
 		String[] token = line.split(" ");
-		assetBuilder.setTeam(Integer.parseInt(token[1]), false);
-		Log.d(TAG, "[" + token[2] + "] TEAM: " + token[1]);
 
-		if (token[2].startsWith("artillery") || token[2].startsWith("mortar")) {
+		String vehicleName = "";
+
+		if (token.length > 2)
+			vehicleName = token[2];
+
+		assetBuilder.setTeam(Integer.parseInt(token[1]), false);
+		Log.d(TAG, "[" + vehicleName + "] TEAM: " + token[1]);
+
+		if (vehicleName.startsWith("artillery")
+				|| vehicleName.startsWith("mortar")) {
 			assetBuilder.setVehicle(Vehicle.ARTILLERY);
 		} else {
 
-			final Vehicle vehicle = getVehicle(token[2]);
+			final Vehicle vehicle = getVehicle(vehicleName);
 
 			if (vehicle != null) {
 				assetBuilder.setVehicle(vehicle);

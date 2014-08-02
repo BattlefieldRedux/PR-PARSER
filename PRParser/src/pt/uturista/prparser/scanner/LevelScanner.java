@@ -10,12 +10,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 
+import pt.uturista.log.Log;
 import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
 import pt.uturista.prspy.model.Layout;
 import pt.uturista.prspy.model.Map;
-import pt.uturista.utils.ZipExtrator;
+import pt.uturista.zip.ZipExtrator;
 
 public class LevelScanner {
+	private static final String TAG = "LevelScanner";
 	private VehicleLibrary vehicleLibrary;
 	private HashSet<Map> levelLibrary;
 	private String tempFolder;
@@ -44,6 +46,8 @@ public class LevelScanner {
 				} else if (file.getName().equals("server.zip")) {
 
 					if (ZipExtrator.extract(file).to(tempFolder)) {
+
+
 						readLevelLayouts(builder);
 						addToLibrary(builder.build());
 					}
