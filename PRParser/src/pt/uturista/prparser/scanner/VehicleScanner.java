@@ -8,13 +8,11 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.util.HashMap;
 
-
-
 import pt.uturista.log.Log;
 import pt.uturista.prspy.model.Vehicle;
 
 public class VehicleScanner {
-	public final static String TAG = "[VehicleScanner]";
+	public final static String TAG = "VehicleScanner";
 	public final static String DEFAULT_ENCODING = "UTF-8";
 	private static String encoding = DEFAULT_ENCODING;
 
@@ -34,7 +32,7 @@ public class VehicleScanner {
 							Vehicle vehicle = scan(vehicleConfig);
 
 							if (vehicle != null) {
-								System.out.println(TAG + " library.put("
+								Log.i(TAG, " library.put("
 										+ vehicle.getKey() + ", "
 										+ vehicle.getName());
 								library.put(vehicle.getKey(), vehicle);
@@ -64,14 +62,20 @@ public class VehicleScanner {
 				if (line.startsWith("rem"))
 					continue;
 
-				if (line.startsWith("ObjectTemplate.vehicleHud.hudName ")) {
+				if (line.startsWith("ObjectTemplate.weaponHud.hudName ")) {
+					String weaponName = line.replace(
+							"ObjectTemplate.weaponHud.hudName ", "");
+					weaponName = weaponName.replace("\"", "");
+					
+					Log.i(TAG, "Scaned weapon: "+weaponName);
+				} else if (line
+						.startsWith("ObjectTemplate.vehicleHud.hudName ")) {
 					// Remove the initial caracters
 					String hudName = line.replace(
 							"ObjectTemplate.vehicleHud.hudName ", "");
 
 					// Remove additional caracters
 					hudName = hudName.replace("\"", "");
-					hudName = hudName.replace("?", "");
 
 					// Set Name
 					builder.setName(hudName);
@@ -177,7 +181,7 @@ public class VehicleScanner {
 						icon = pt.uturista.prspy.R.drawable.mini_attack_heli;
 
 					} else {
-						System.err.println("[" + file.getName()
+						Log.e(TAG, "[" + file.getName()
 								+ "] ICON NOT FOUND:" + token[1]);
 					}
 

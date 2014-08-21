@@ -60,9 +60,16 @@ public class LayoutScanner {
 					}
 					assetBuilder = new Asset.Builder();
 
+					/*
+					 * ObjectTemplate.team <int>
+					 * 
+					 * This is an alternative way to define which team the
+					 * spawner belongs to w/o need of flags. The team numbers
+					 * are same as above. You can also use
+					 */
 				} else if (line.startsWith("ObjectTemplate.team ")) {
 					token = line.split(" ");
-					assetBuilder.setTeam(Integer.parseInt(token[1]));
+					//assetBuilder.setTeam(Integer.parseInt(token[1]));
 
 				} else if (line.startsWith("ObjectTemplate.minSpawnDelay")) {
 
@@ -83,7 +90,15 @@ public class LayoutScanner {
 					Log.d(TAG, "startDelay: " + token[1]);
 					if (token[1].equals("1"))
 						assetBuilder.setStartDelay(true);
-
+					/*
+					 * ObjectTemplate.setObjectTemplate <int> <string>
+					 * 
+					 * This defines what should spawn when the flag that this
+					 * spawner belongs to it capped by a certain team. The
+					 * integers are 0, 1 and 2. 0 is neutral, 1 opfor and 2
+					 * blufor. <string> is the template name of the vehicle to
+					 * spawn
+					 */
 				} else if (line.startsWith("ObjectTemplate.setObjectTemplate")) {
 					parseAssetName(line, assetBuilder);
 
