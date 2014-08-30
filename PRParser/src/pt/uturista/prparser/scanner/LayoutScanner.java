@@ -50,13 +50,16 @@ public class LayoutScanner {
 			while ((line = bf.readLine()) != null) {
 				Log.i(TAG, line);
 
-				if (line.startsWith("ObjectTemplate.create ObjectSpawner")) {
-					Log.d(TAG, "ObjectTemplate.create");
+				if (line.startsWith("ObjectTemplate.create ObjectSpawner") || line.isEmpty()) {
 
 					if (assetBuilder != null) {
 						final Asset asset = assetBuilder.build();
-						if (asset != null)
+						if (asset != null) {
+							Log.d(TAG, "layoutBuilder.addAsset("+asset.getVehicle().getName()+","+ asset.getTeam()+")");
 							layoutBuilder.addAsset(asset, asset.getTeam());
+						} else {
+							Log.e(TAG, "Asset not valid");
+						}
 					}
 					assetBuilder = new Asset.Builder();
 
@@ -69,7 +72,7 @@ public class LayoutScanner {
 					 */
 				} else if (line.startsWith("ObjectTemplate.team ")) {
 					token = line.split(" ");
-					//assetBuilder.setTeam(Integer.parseInt(token[1]));
+					// assetBuilder.setTeam(Integer.parseInt(token[1]));
 
 				} else if (line.startsWith("ObjectTemplate.minSpawnDelay")) {
 

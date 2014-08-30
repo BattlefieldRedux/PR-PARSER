@@ -13,12 +13,12 @@ import pt.uturista.zip.ZipExtrator;
 
 import com.google.gson.Gson;
 
-public class Main {
+public class PrParser {
 
 	public static void main(String[] args) {
 		Log.info(false);
-		Log.debug(false);
-		Log.error(true);
+		Log.debug(true);
+		Log.error(false);
 
 		final String levelsPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\levels";
 		final String vehiclesPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\content\\objects_vehicles_server.zip";
@@ -46,6 +46,8 @@ public class Main {
 
 		final String finalJson = json.replace("?", " ");
 		Log.p(finalJson);
+		
+		
 	}
 
 }

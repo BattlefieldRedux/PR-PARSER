@@ -32,10 +32,12 @@ public class VehicleScanner {
 							Vehicle vehicle = scan(vehicleConfig);
 
 							if (vehicle != null) {
-								Log.i(TAG, " library.put("
+								Log.d(TAG, " library.put("
 										+ vehicle.getKey() + ", "
 										+ vehicle.getName());
 								library.put(vehicle.getKey(), vehicle);
+							}else{
+								Log.d(TAG, "vehicle not valid");
 							}
 
 						}
@@ -192,6 +194,7 @@ public class VehicleScanner {
 			e.printStackTrace();
 		}
 
+		
 		return builder.build();
 	}
 
