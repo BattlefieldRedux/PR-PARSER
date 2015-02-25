@@ -1,53 +1,69 @@
 package pt.uturista.prparser;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.HashMap;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 import pt.uturista.log.Log;
 import pt.uturista.prparser.scanner.LevelScanner;
-import pt.uturista.prparser.scanner.LevelScanner.LevelLibrary;
 import pt.uturista.prparser.scanner.VehicleScanner;
-import pt.uturista.prparser.scanner.VehicleScanner.VehicleLibrary;
 import pt.uturista.prspy.model.Map;
-import pt.uturista.zip.ZipExtrator;
-
-import com.google.gson.Gson;
+import pt.uturista.prspy.model.Vehicle;
 
 public class PrParser {
+	static final String EXTRACT_PATH = "C:\\Users\\Vasco\\Desktop\\PRtemp";
+	static final String MOD_PATH = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr";
+	static final String VEHICLE_PATH = "\\content\\objects_vehicles_server.zip";
+	static final String LEVEL_PATH = "\\levels";
+	static final String TAG = "PrParser";
 
 	public static void main(String[] args) {
 		Log.info(false);
-		Log.debug(true);
+		Log.debug(false);
 		Log.error(false);
 
-		final String levelsPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\levels";
-		final String vehiclesPath = "C:\\Program Files (x86)\\Origin Games\\Battlefield 2 Complete Collection\\mods\\pr\\content\\objects_vehicles_server.zip";
-		final String tempFolderPath = "C:\\Users\\Vascko\\Desktop\\PRtemp";
+		final File vehiclesRootFile = new File(MOD_PATH + VEHICLE_PATH);
 
-		final File vehiclesRootFile = new File(vehiclesPath);
-		if (!ZipExtrator.extract(vehiclesRootFile).to(tempFolderPath))
-			return;
+		Log.p("==================================================");
+		Log.p("===============  Extracting files  ===============");
+		Log.p("==================================================");
+		try {
+			// Initiate ZipFile object with the path/name of the zip file.
+			ZipFile zipFile = new ZipFile(vehiclesRootFile);
 
-		final File unzippedRoot = new File(tempFolderPath);
-		VehicleLibrary vehicleLibrary = VehicleScanner
-				.buildLibrary(unzippedRoot);
+			// Extracts all files to the path specified
+			zipFile.extractAll(EXTRACT_PATH);
 
-		System.out
-				.println("\n\n=========================\n=========================\n\n");
-		final File levelsRoot = new File(levelsPath);
-		LevelScanner levelScanner = new LevelScanner(vehicleLibrary,
-				tempFolderPath);
-		LevelLibrary levelLibrary = levelScanner.buildLibrary(levelsRoot);
+			Log.p("==================================================");
+			Log.p("==========  Building vehicle library  ============");
+			Log.p("==================================================");
 
-		Gson gson = new Gson();
+			final File unzippedRoot = new File(EXTRACT_PATH);
+			VehicleScanner vehicleScanner = new VehicleScanner();
+			HashMap<String, Vehicle> vehicleLibrary = vehicleScanner
+					.buildLibrary(unzippedRoot);
 
-		ArrayList<Map> output = levelLibrary.toArray();
-		String json = gson.toJson(output);
+			Log.p("==================================================");
+			Log.p("===========  Building level library  =============");
+			Log.p("==================================================");
 
-		final String finalJson = json.replace("?", " ");
-		Log.p(finalJson);
-		
-		
+			final File levelsRoot = new File(MOD_PATH + LEVEL_PATH);
+			LevelScanner levelScanner = new LevelScanner(vehicleLibrary,
+					EXTRACT_PATH);
+			HashMap<String, Map> levelLibrary = levelScanner
+					.buildLibrary(levelsRoot);
+
+			Log.p("==================================================");
+			Log.p("=============  Writing information  ==============");
+			Log.p("==================================================");
+
+			pt.uturista.prparser.writer.PRWriter json = new pt.uturista.prparser.writer.Json();
+
+			json.write(vehicleLibrary, levelLibrary);
+		} catch (ZipException e) {
+			Log.e(TAG, e.toString());
+		}
 	}
 
 }
